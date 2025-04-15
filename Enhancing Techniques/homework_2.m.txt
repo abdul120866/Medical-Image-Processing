@@ -1,0 +1,35 @@
+function hearing_test()
+    frequencies = [20, 100, 500, 1000, 5000, 10000, 15000, 20000]; % Hz
+    thresholds = zeros(size(frequencies));
+    fs = 44100; % Sampling rate
+    duration = 2; % Seconds
+
+    for i = 1:length(frequencies)
+        amp = 1; % Start amplitude
+        step = 0.1;
+        while true
+            yesno = hear_sinus(amp, frequencies(i), duration, fs);
+            if yesno
+                amp = amp - step;
+            else
+                amp = amp + step;
+            end
+            if step < 0.01, break; end
+            step = step * 0.9;
+        end
+        thresholds(i) = 20*log10(amp);
+    end
+
+    semilogx(frequencies, thresholds, 'o-');
+    xlabel('Frequency (Hz)'); ylabel('Threshold (dB)');
+    title('Hearing Threshold vs. Frequency');
+end
+
+function condition = hear_sinus(amplitude, frequency, duration, fs)
+    tt = 0:1/fs:duration;
+    xx = amplitude * cos(2*pi*frequency*tt + rand*2*pi);
+    sound(xx, fs);
+    pause(duration);
+    response = input('Did you hear the tone? (y/n): ', 's');
+    yesno = ~isempty(response) && upper(response(1)) == 'Y';
+end
