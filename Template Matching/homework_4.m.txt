@@ -1,0 +1,51 @@
+
+img3 = im2double(rgb2gray(imread('C:\Users\rihaw\OneDrive\Desktop\IP Homeworks\homework4\Image3.jpg')));
+img4 = im2double(rgb2gray(imread('C:\Users\rihaw\OneDrive\Desktop\IP Homeworks\homework4\Image4.jpg')));
+
+function H = ideal_filter(shape, radius, type)
+
+    [rows, cols] = size(shape);
+    [u, v] = meshgrid(1:cols, 1:rows);
+    center_u = ceil(cols/2);
+    center_v = ceil(rows/2);
+    D = sqrt((u - center_u).^2 + (v - center_v).^2);
+    
+    if strcmp(type, 'low')
+        H = double(D <= radius);
+    elseif strcmp(type, 'high')
+        H = double(D > radius);
+    end
+end
+radii = [10, 30, 60]; % Three meaningful radii
+
+for i = 1:length(radii)
+    r = radii(i);
+    
+    % Low-pass
+    H_low3 = ideal_filter(img3, r, 'low');
+    H_low4 = ideal_filter(img4, r, 'low');
+
+    % High-pass
+    H_high3 = ideal_filter(img3, r, 'high');
+    H_high4 = ideal_filter(img4, r, 'high');
+
+    % Apply filters using DFT
+    img3_fft = fftshift(fft2(img3));
+    img4_fft = fftshift(fft2(img4));
+
+    img3_low = real(ifft2(ifftshift(img3_fft .* H_low3)));
+    img4_low = real(ifft2(ifftshift(img4_fft .* H_low4)));
+
+    img3_high = real(ifft2(ifftshift(img3_fft .* H_high3)));
+    img4_high = real(ifft2(ifftshift(img4_fft .* H_high4)));
+
+    % Display results
+    figure;
+    subplot(2,3,1), imshow(img3), title('Original Image 3');
+    subplot(2,3,2), imshow(img3_low, []), title(['Low-pass r=' num2str(r)]);
+    subplot(2,3,3), imshow(img3_high, []), title(['High-pass r=' num2str(r)]);
+    
+    subplot(2,3,4), imshow(img4), title('Original Image 4');
+    subplot(2,3,5), imshow(img4_low, []), title(['Low-pass r=' num2str(r)]);
+    subplot(2,3,6), imshow(img4_high, []), title(['High-pass r=' num2str(r)]);
+end
